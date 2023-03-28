@@ -31,7 +31,7 @@ public class DF {
 			HashSet<String> set = new HashSet<>();
 
 			for (String token : tokens) {
-				if (!(set.contains(token) || words.contains(token) || token.equals(""))) {
+				if (!(set.contains(token) || words.contains(token.toLowerCase()) || token.equals(""))) {
 					set.add(token);
 					word.set(token);
 					context.write(word, one); // context is like the output

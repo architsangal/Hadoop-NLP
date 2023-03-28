@@ -13,7 +13,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 
-public class DFRecordReader extends RecordReader<LongWritable, Text> {
+public class DFRecordReader extends RecordReader<Text, Text> {
 
 //	The following doesn't make sense as the entire document
 //	is to be read, so start, offset and end doesn't make sense -
@@ -32,7 +32,7 @@ public class DFRecordReader extends RecordReader<LongWritable, Text> {
     
     private Text value = new Text();
     // Initialized as -1 but updated later
-    private LongWritable key = new LongWritable(-1);
+    private Text key = new Text();
     
     // Is the reading complete, initialized with false.
     private boolean finished = false;
@@ -57,19 +57,10 @@ public class DFRecordReader extends RecordReader<LongWritable, Text> {
             
             // finding a suitable key
             String k = file.toString();
-            String ke = k.substring(k.indexOf("input/")+6);
+//            String ke = k.substring(k.indexOf("input/")+6);
 //            System.out.println("file path : " + ke.substring(0,ke.indexOf(".")));            
             
-            int keyTaken = -1;
-            try
-            {
-            	keyTaken = Integer.parseInt(ke.substring(0,ke.indexOf(".")));
-            }
-            catch(Exception e)
-            {
-            	// do nothing already -1; // signify some problem
-            }
-            key.set(keyTaken);
+            key = new Text(k);
             
             FileSystem fileSytemDF= file.getFileSystem(conf);
             
@@ -96,7 +87,7 @@ public class DFRecordReader extends RecordReader<LongWritable, Text> {
     }
 
     @Override
-    public LongWritable getCurrentKey() throws IOException, InterruptedException
+    public Text getCurrentKey() throws IOException, InterruptedException
     {
         return key;
     }

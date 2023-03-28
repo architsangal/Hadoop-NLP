@@ -9,7 +9,7 @@ import org.apache.hadoop.mapreduce.lib.input.*;
 
 
 public class DFInputFormat
-        extends FileInputFormat<LongWritable, Text> {
+        extends FileInputFormat<Text, Text> {
 
     @Override
     protected boolean isSplitable(JobContext context, Path file) {
@@ -17,7 +17,7 @@ public class DFInputFormat
     }
 
     @Override
-    public RecordReader<LongWritable, Text> createRecordReader(
+    public RecordReader<Text, Text> createRecordReader(
             InputSplit split, TaskAttemptContext context) throws IOException,
             InterruptedException {
         DFRecordReader reader = new DFRecordReader();
