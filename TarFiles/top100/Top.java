@@ -26,14 +26,27 @@ class Top
 
         int count = 0;
         ArrayList<String> answer = new ArrayList<String>();
+        ArrayList<Integer> df = new ArrayList<Integer>();
         while(count<=100)
         {
             int DF = pq.remove();
-            answer.add(map.get(DF).get(0));
+            try
+            {
+                Integer.parseInt(map.get(DF).get(0));
+            }
+            catch(Exception e)
+            {
+                answer.add(map.get(DF).get(0));
+                System.out.print("\"" + map.get(DF).get(0) + "\",");
+                df.add(DF);
+                count++;
+            }
             map.get(DF).remove(0);
-            count++;
         }
-
-        System.out.println(answer);
+        System.out.println();
+        for(int DF : df)
+        {
+            System.out.print(DF + ",");
+        }
     }
 }
