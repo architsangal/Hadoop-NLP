@@ -88,9 +88,6 @@ public class TFIDF
 	                    map.get(DF).remove(0);
 	                }
 	                
-	            	System.out.println(Arrays.toString(Top.top));
-	            	System.out.println(Arrays.toString(Top.freq));
-
 //	                System.out.println();
 //	                for(int DF : df)
 //	                {
