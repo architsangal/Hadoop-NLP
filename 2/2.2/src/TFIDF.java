@@ -1,5 +1,5 @@
 import java.io.IOException;
-//import java.net.URI;
+import java.net.URI;
 import java.util.Arrays;
 
 import org.apache.hadoop.io.LongWritable;
@@ -19,15 +19,90 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import opennlp.tools.stemmer.PorterStemmer;
 
-//@Override
-//public void map(Object key, Text value, Context context) throws IOException, InterruptedException
-//{
-//
+import org.apache.hadoop.fs.FileSystem;
+import java.io.*;
+import java.util.*;
 
 public class TFIDF
 {
     public static class MapTF extends Mapper<Text, Text, Text, MapWritable>
     {
+
+        @Override
+        public void setup(Context context) throws IOException, InterruptedException
+        {
+        	if(Top.initialized)
+        	{
+        		return;
+        	}
+	        // Load DF values from the cached file into a main-memory data structure
+	        URI[] cacheFiles = context.getCacheFiles();
+	        if (cacheFiles != null && cacheFiles.length > 0) {
+	            try
+	            {
+	            	HashMap<Integer,ArrayList<String>> map = new HashMap<Integer,ArrayList<String>>();
+	                PriorityQueue<Integer> pq = new PriorityQueue<>(Collections.reverseOrder());
+	                
+	                BufferedReader bufferedReader = new BufferedReader(new FileReader(cacheFiles[0].toString()));
+	                String line;
+	                while ((line = bufferedReader.readLine()) != null)
+	                {
+	                    String[] words = line.trim().split("\t");
+	                    String val = words[0];
+	                    int DF = Integer.parseInt(words[1]);
+	                    pq.add(DF);
+	                    if(map.containsKey(DF))
+	                        map.get(DF).add(val);
+	                    else
+	                    {
+	                        map.put(DF, new ArrayList<String>());
+	                        map.get(DF).add(val);
+	                    }
+
+//                        System.out.println(val + " " + DF);
+	                }
+	                
+	                Top obj = new Top();
+	                
+	                bufferedReader.close();
+
+	                int count = 0;
+	                ArrayList<String> answer = new ArrayList<String>();
+	                ArrayList<Integer> df = new ArrayList<Integer>();
+	                while(count<=100)
+	                {
+	                    int DF = pq.remove();
+	                    try
+	                    {
+	                        Integer.parseInt(map.get(DF).get(0));
+	                    }
+	                    catch(Exception e)
+	                    {
+	                        answer.add(map.get(DF).get(0));
+//	                        System.out.print("\"" + map.get(DF).get(0) + "\",");
+//	                        df.add(DF);
+	                        Top.newtop(map.get(DF).get(0));
+	                        Top.newfreq(DF);
+	                        count++;
+	                    }
+	                    map.get(DF).remove(0);
+	                }
+	                
+	            	System.out.println(Arrays.toString(Top.top));
+	            	System.out.println(Arrays.toString(Top.freq));
+
+//	                System.out.println();
+//	                for(int DF : df)
+//	                {
+//	                    System.out.print(DF + ",");
+//	                }
+	            } catch (Exception e) {
+	            	System.out.println("Error while reading cache : " + e.toString());
+	            	System.exit(1);
+	            }
+	        }
+	    }
+        
         @Override
         public void map(Text key, Text value, Context context) throws IOException, InterruptedException
         {
@@ -57,7 +132,7 @@ public class TFIDF
         	{
         		map.put(new Text(top[i]),new LongWritable(freq[i]));
         	}
-        	
+        	        	
         	context.write(new Text(key.toString()), map);
         }
     }
@@ -90,9 +165,7 @@ public class TFIDF
 
         	String line = value.toString();
         	String[] tokens = line.split("\t",-1);
-        	
-        	System.out.println(Arrays.toString(tokens));
-        	
+        	        	
         	context.write(new Text(tokens[0]+"\t"+tokens[1]), new Text(tokens[2]));
         }
     }
@@ -125,9 +198,8 @@ public class TFIDF
         Configuration conf = new Configuration();
 		
 		Job job0 = Job.getInstance(conf, "MR TF");
-        //job.setJarByClass(TF.class);
 
-        //job.addCacheFile(new URI("/Users/architsangal/Data/College/Semester/NoSQL/Assignment/Assignment_2/Hadoop-NLP/TarFiles/output/full/part-r-00000"));
+        job0.addCacheFile(new URI("/Users/architsangal/Data/College/Semester/NoSQL/Assignment/Assignment_2/Hadoop-NLP/TarFiles/output/full/part-r-00000"));
         
         job0.setInputFormatClass(DFInputFormat.class);
         
@@ -145,6 +217,8 @@ public class TFIDF
     	///////////////////
         Configuration conf1 = new Configuration();		
 		Job job1 = Job.getInstance(conf1, "Stripes");
+		
+		job1.addCacheFile(new URI("/Users/architsangal/Data/College/Semester/NoSQL/Assignment/Assignment_2/Hadoop-NLP/TarFiles/output/full/part-r-00000"));
         
         job1.setMapperClass(Map.class);
         job1.setReducerClass(Reduce.class);
